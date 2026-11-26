@@ -1,0 +1,1015 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ask the Expert – Southwire Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:ital,wght@0,600;0,700;1,700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   THEME TOKENS
+   ========================================================= */
+:root{
+  --red:#D71920; --red-dark:#B3121A; --red-glow:rgba(215,25,32,.45);
+  --ink:#111111; --black:#000000; --charcoal:#1E1E1E;
+  --bg:#ECECEC; --surface:#FFFFFF; --text:#111111; --muted:#4A4A4A;
+  --trace:#D2D2D2; --tower:#9A9A9A; --wire-bg:#BDBDBD;
+  --user-bg:#111111; --user-text:#FFFFFF;
+  --copper:#B8733A; --copper-dark:#7A4A1F;
+  --display:'Barlow Condensed','Arial Narrow',Arial,sans-serif;
+  --body:'Barlow','Segoe UI',Arial,sans-serif;
+  --sidebar-w:280px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#161616; --surface:#222222; --text:#F2F2F2; --muted:#B5B5B5;
+    --trace:#2F2F2F; --tower:#4A4A4A; --wire-bg:#3A3A3A;
+    --user-bg:#000000; --user-text:#FFFFFF;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:var(--body);background:var(--bg);color:var(--text);overflow:hidden;-webkit-font-smoothing:antialiased}
+button,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* =========================================================
+   INTRO: circuits converge on the logo
+   ========================================================= */
+#intro{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;transition:opacity .5s ease,visibility .5s}
+#intro svg{position:absolute;inset:0;width:100%;height:100%}
+#intro .cv{fill:none;stroke:var(--red);stroke-width:5;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;animation:cvDraw 1.4s ease-in forwards}
+@keyframes cvDraw{to{stroke-dashoffset:0}}
+#intro .hub{fill:var(--red);transform-box:fill-box;transform-origin:center;transform:scale(0);animation:hubFlash .4s 1.4s ease-out forwards}
+@keyframes hubFlash{0%{transform:scale(0)}60%{transform:scale(1.8)}100%{transform:scale(1)}}
+#intro .logo-box{position:relative;opacity:0;transform:scale(.5);animation:logoPop .5s 1.7s cubic-bezier(.3,1.5,.5,1) forwards, logoPulse 1s 2.3s ease-out}
+@keyframes logoPop{to{opacity:1;transform:scale(1)}}
+@keyframes logoPulse{0%{box-shadow:0 0 0 0 var(--red-glow)}100%{box-shadow:0 0 0 36px rgba(215,25,32,0)}}
+#intro .tagline{position:relative;font-family:var(--display);font-style:italic;font-weight:700;font-size:clamp(22px,3vw,30px);text-transform:uppercase;letter-spacing:10px;opacity:0;animation:tagIn .6s 2.2s ease-out forwards}
+@keyframes tagIn{to{opacity:1;letter-spacing:3px}}
+body.ready #intro{opacity:0;visibility:hidden}
+
+/* Logo slot (used in intro + sidebar) */
+.logo-box{background:var(--ink);display:flex;align-items:center;justify-content:center;color:#fff;letter-spacing:2px;font-size:13px}
+.logo-box img{max-width:100%;max-height:100%;display:block}
+#intro .logo-box{width:min(640px,90vw);height:auto;border:0}
+
+/* =========================================================
+   APP LAYOUT
+   ========================================================= */
+.app{display:flex;height:100%;height:100dvh;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+
+/* ---- Sidebar ---- */
+.sidebar{width:var(--sidebar-w);flex:none;background:var(--charcoal);color:#fff;display:flex;flex-direction:column;position:relative;z-index:20;transform:translateX(-100%);transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+body.ready .sidebar{transform:none}
+@media (min-width:861px){.sidebar{margin-right:-1px}}  /* overlap main by 1px so no hairline seam shows between them */
+.side-head{padding:22px 20px 34px;clip-path:polygon(0 0,100% 0,100% 78%,0 100%);display:flex;flex-direction:column;gap:10px;
+  background:linear-gradient(100deg,var(--red) 40%,#FF6B70 50%,var(--red) 60%);background-size:300% 100%}
+@keyframes shine{from{background-position:100% 0}to{background-position:-100% 0}}
+.side-head .logo-box{width:140px;height:44px;background:transparent;border:1.5px dashed rgba(255,255,255,.75);font-size:11px}
+.side-head .title{font-family:var(--display);font-style:italic;font-weight:700;font-size:28px;text-transform:uppercase;line-height:1;margin:0}
+.side-body{padding:16px 18px;display:flex;flex-direction:column;gap:14px;flex:1;min-height:0}
+.btn-new{min-height:46px;background:#fff;color:var(--ink);border:0;font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:1px;transform:skewX(-12deg);cursor:pointer;transition:background .2s,color .2s}
+.btn-new span{display:inline-block;transform:skewX(12deg)}
+.btn-new:hover{background:var(--red);color:#fff}
+.side-label{font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:1.5px;color:#BDBDBD;margin:4px 0 0}
+.history{list-style:none;margin:0;padding:0;overflow-y:auto;flex:1;min-height:0;scrollbar-width:none}
+.history::-webkit-scrollbar{display:none}
+.history button{width:100%;text-align:left;background:none;border:0;border-bottom:1px solid #333;color:#CFCFCF;padding:10px 4px;font-size:15px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history button:hover{color:#fff}
+.history button[aria-current="true"]{color:#fff;border-bottom-color:var(--red);font-weight:600}
+.history button.loading{color:#fff;animation:threadPulse 1s ease-in-out infinite}
+@keyframes threadPulse{50%{opacity:.45}}
+.history .empty{color:#9A9A9A;font-size:14px;padding:6px 0}
+.side-foot{display:flex;align-items:center;gap:8px;font-size:13px;color:#BDBDBD;padding:12px 18px 18px}
+.side-foot i{width:18px;height:4px;background:var(--red);transform:skewX(-25deg);display:inline-block}
+.resizer{position:absolute;top:0;right:-4px;width:8px;height:100%;cursor:col-resize;z-index:5;touch-action:none}
+.resizer:hover,.resizer.dragging{background:var(--red);opacity:.6}
+body.resizing{cursor:col-resize;user-select:none}
+body.resizing .sidebar{transition:none}
+
+/* ---- Main ---- */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;position:relative;overflow:hidden}
+/* Red patch under the sidebar/POWERING seam so no light hairline can ever show there (fades in after the load animation) */
+.sidebar::after{content:"";position:absolute;right:-3px;top:0;width:6px;height:50px;background:var(--red);z-index:4;pointer-events:none;opacity:0;transition:opacity .2s .9s}
+body.ready .sidebar::after{opacity:1}
+@media (max-width:860px){.sidebar::after{display:none}}
+
+/* Background layer: live circuit + power-line skyline */
+.bg{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity .8s .3s}
+body.ready .bg{opacity:1}
+.bg svg.circuit{position:absolute;inset:0;width:100%;height:100%}
+.trace{fill:none;stroke:var(--trace);stroke-width:2}
+.cur{fill:none;stroke:var(--red);stroke-width:3;stroke-linecap:round;stroke-dasharray:80 1400;animation:flow 4s linear infinite}
+.cur2{animation-duration:5.5s;animation-delay:-1.5s}.cur3{animation-duration:3.5s;animation-delay:-2.5s}.cur4{animation-duration:6s;animation-delay:-.8s}
+@keyframes flow{from{stroke-dashoffset:1480}to{stroke-dashoffset:0}}
+.cn{animation:cn 3s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.cn:nth-of-type(2n){animation-delay:-1.5s}
+@keyframes cn{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.25) rotate(60deg)}}
+.bg svg.grid{position:absolute;left:0;right:0;bottom:0;width:100%;height:300px;opacity:.7}
+.bg-logo{position:absolute;left:50%;top:42%;width:min(820px,90%);height:auto;transform:translate(-50%,-50%);opacity:.18;pointer-events:none;user-select:none}
+.tower{fill:none;stroke:var(--tower);stroke-width:3}
+.line{fill:none;stroke:var(--wire-bg);stroke-width:2}
+.gl{fill:none;stroke:var(--red);stroke-width:3;stroke-dasharray:30 260;animation:gl 2.6s linear infinite}
+.gl2{animation-delay:-1.3s}.gl3{animation-duration:3.4s}
+@keyframes gl{from{stroke-dashoffset:290}to{stroke-dashoffset:0}}
+
+/* Top ticker */
+.topbar{position:relative;z-index:5;flex:none;display:flex;align-items:stretch;height:50px;background:var(--ink);border-bottom:4px solid var(--red);transform:translateY(-110%);transition:transform .5s .35s cubic-bezier(.2,.8,.2,1)}
+body.ready .topbar{transform:none}
+.menu-btn{display:none;width:50px;border:0;background:var(--red);color:#fff;cursor:pointer;align-items:center;justify-content:center}
+.ticker-tag{flex:none;display:flex;align-items:center;padding:0 28px 0 18px;background:var(--red);color:#fff;font-family:var(--display);font-style:italic;font-weight:700;font-size:18px;text-transform:uppercase;clip-path:polygon(0 0,100% 0,86% 100%,0 100%);position:relative;z-index:1}
+.ticker{flex:1;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;display:flex;align-items:center}
+.ticker::-webkit-scrollbar{display:none}
+.ticker-track{display:flex;justify-content:space-between;min-width:100%;width:max-content;padding:0 12px;color:#fff;font-family:var(--display);font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.ticker-track span{display:inline-flex;align-items:center;gap:12px;padding:0 6px}
+.ticker-track span:not(:last-child)::after{content:"";width:10px;height:3px;background:#fff;transform:skewX(-25deg)}
+
+/* Thread */
+.thread{position:relative;z-index:1;flex:1;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth;opacity:0;transition:opacity .6s .5s}
+body.ready .thread{opacity:1}
+.wires{display:none}
+.wire{position:absolute;height:5px;background:var(--red);transition:transform .55s linear,opacity .6s;transform:scaleX(0)}
+.wire.from-right{transform-origin:right}
+.wire.from-left{transform-origin:left}
+.wire.on{transform:scaleX(1)}
+.wire.done{opacity:.35}
+.wire::after{content:"";position:absolute;top:50%;width:14px;height:14px;margin-top:-7px;border-radius:50%;background:var(--red)}
+.wire.from-right::after{left:-7px}
+.wire.from-left::after{right:-7px}
+.column{max-width:880px;margin:0 auto;padding:36px 32px 24px;display:flex;flex-direction:column;gap:22px;min-height:100%}
+
+/* Welcome */
+.welcome{margin:auto 0;display:flex;flex-direction:column;gap:18px;padding:24px 0}
+.welcome h1{margin:0;font-family:var(--display);font-style:italic;font-weight:700;font-size:clamp(36px,5vw,58px);line-height:.95;text-transform:uppercase}
+.welcome p{margin:0;font-size:18px;color:var(--muted);max-width:560px}
+.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:8px}
+.suggestions button{text-align:left;min-height:72px;padding:14px 16px;border:2px solid var(--text);background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35;transition:transform .15s,box-shadow .15s}
+.suggestions button strong{display:block;font-size:16px}
+.suggestions button:hover{transform:translate(-3px,-3px);box-shadow:5px 5px 0 var(--red)}
+
+/* Messages */
+.msg-user{align-self:flex-end;max-width:72%;background:var(--user-bg);color:var(--user-text);padding:14px 20px;font-size:16px;line-height:1.5;clip-path:polygon(0 0,100% 0,100% 100%,12px 100%);white-space:pre-wrap;word-wrap:break-word;animation:userIn .4s cubic-bezier(.2,.8,.2,1)}
+@keyframes userIn{from{opacity:0;transform:translateX(40px)}}
+.msg-bot{align-self:flex-start;max-width:86%;background:var(--surface);padding:20px 22px;font-size:16px;line-height:1.6;box-shadow:6px 6px 0 var(--red);animation:botIn .6s ease-out}
+@keyframes botIn{0%{opacity:0;box-shadow:0 0 0 0 var(--red)}50%{opacity:1;box-shadow:0 0 0 6px var(--red-glow)}100%{box-shadow:6px 6px 0 var(--red)}}
+.msg-bot .who{font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:1.5px;color:var(--red-dark);margin-bottom:8px}
+@media (prefers-color-scheme:dark){.msg-bot .who{color:#FF6B70}}
+.msg-bot .content p{margin:0 0 10px}.msg-bot .content p:last-child{margin-bottom:0}
+.msg-bot .content ul{margin:0 0 10px;padding-left:20px}
+.msg-bot .content code{background:rgba(127,127,127,.18);padding:1px 6px;font-size:.92em}
+/* Sources footer — "Style B": SOURCE: label + numbered buttons with an external-link icon */
+:root{--sw-black:#1A1A1A}   /* red = the page's --red (Southwire red) */
+.msg-bot .sources{margin-top:12px;padding-top:10px;border-top:1px solid rgba(127,127,127,.25);display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.sources-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#2C2C2A}
+@media (prefers-color-scheme:dark){.sources-label{color:var(--muted)}}
+.bubble{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:3px;box-sizing:border-box;
+  height:22px;min-width:22px;padding:0 6px;background:#FFFFFF;border:1.5px solid var(--sw-black);border-radius:0;
+  box-shadow:2px 2px 0 var(--red);color:var(--sw-black);font-size:12px;font-weight:600;line-height:1;
+  text-decoration:none;cursor:pointer;transition:all .12s ease}
+.bubble .ext-icon{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bubble:hover,.bubble:focus-visible{background:var(--red);border-color:var(--red);color:#FFFFFF;box-shadow:2px 2px 0 var(--sw-black);transform:translate(-1px,-1px);outline:none}
+.bubble:active{transform:translate(1px,1px);box-shadow:0 0 0 var(--sw-black)}   /* pressed feel */
+/* Tooltip: ink box with a red underline (like the top "Powering" bar), red pointer below */
+.bubble::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 10px);left:-4px;white-space:nowrap;
+  background:var(--ink);color:#fff;border-bottom:3px solid var(--red);padding:6px 10px 5px;
+  font-family:var(--display);font-style:normal;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:none;
+  box-shadow:0 6px 16px rgba(0,0,0,.25);opacity:0;transform:translateY(4px);pointer-events:none;transition:opacity .15s,transform .15s;z-index:10}
+.bubble::before{content:"";position:absolute;bottom:calc(100% + 4px);left:6px;width:0;height:0;
+  border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid var(--red);
+  opacity:0;transform:translateY(4px);pointer-events:none;transition:opacity .15s,transform .15s;z-index:11}
+.bubble:hover::after,.bubble:focus-visible::after,.bubble:hover::before,.bubble:focus-visible::before{opacity:1;transform:none}
+.msg-bot.error{box-shadow:6px 6px 0 var(--muted)}
+.msg-actions{display:flex;justify-content:flex-end;margin-top:8px;white-space:normal;opacity:0;transition:opacity .2s}
+.msg-user:hover .msg-actions,.msg-bot:hover .msg-actions,.msg-actions:focus-within{opacity:1}
+@media (hover:none){.msg-actions{opacity:1}}
+.copy-btn{display:inline-flex;align-items:center;gap:6px;border:0;background:none;color:inherit;opacity:.75;font:inherit;font-size:12px;padding:4px 6px;cursor:pointer}
+.copy-btn:hover,.copy-btn:focus-visible{opacity:1}
+.copy-btn svg{width:15px;height:15px}
+.msg-bot .copy-btn{color:var(--muted)}
+.msg-bot .copy-btn:hover{color:var(--red)}
+.copy-btn.copied{color:var(--red);opacity:1}
+/* User message: bubble stays compact; a small gray copy icon floats just below it on hover */
+.msg-user-wrap{align-self:flex-end;max-width:72%;position:relative;display:flex;flex-direction:column;align-items:flex-end}
+.msg-user-wrap .msg-user{max-width:100%;align-self:auto}
+.msg-user-wrap .msg-actions{position:absolute;top:100%;right:0;margin-top:1px}
+.msg-user-wrap:hover .msg-actions{opacity:1}
+.msg-user-wrap .copy-btn{color:var(--muted);padding:2px}
+.msg-user-wrap .copy-btn:hover{color:var(--red)}
+.msg-user-wrap .copy-btn span{display:none}
+/* Assistant message: same small gray icon, floating just below the card on the left (clears the red shadow) */
+.msg-bot{position:relative}
+.msg-bot .msg-actions{position:absolute;top:100%;left:0;margin-top:8px}
+.msg-bot .copy-btn{padding:2px}
+.msg-bot .copy-btn span{display:none}
+.cursor{display:inline-block;width:10px;height:18px;background:var(--red);vertical-align:-3px;margin-left:3px;animation:blink .8s steps(2) infinite}
+@keyframes blink{to{opacity:0}}
+.typing{align-self:flex-start;display:flex;gap:8px;align-items:center;background:var(--surface);padding:16px 22px;box-shadow:6px 6px 0 var(--red)}
+.typing i{width:10px;height:10px;background:var(--red);animation:bounce 1.1s ease-in-out infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0) skewX(-15deg);opacity:.4}30%{transform:translateY(-8px) skewX(-15deg);opacity:1}}
+
+/* Composer */
+.composer{position:relative;z-index:2;flex:none;padding:10px 32px 18px;max-width:880px;width:100%;margin:0 auto;opacity:0;transform:translateY(20px);transition:opacity .5s .6s,transform .5s .6s}
+body.ready .composer{opacity:1;transform:none}
+.quick{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.quick button{min-height:40px;padding:0 14px;border:1.5px solid var(--text);background:var(--surface);font-weight:600;font-size:14px;transform:skewX(-8deg);cursor:pointer}
+.quick button span{display:inline-block;transform:skewX(8deg)}
+.quick button:hover{background:var(--text);color:var(--surface)}
+/* ---- Input box: "Style 2c" — white box, red Send face with a black slanted stripe behind it ---- */
+.composer{--slant:16px;--stripe:10px}
+.input-row{display:flex;align-items:stretch;min-height:54px;background:#FFFFFF;border:1.5px solid var(--sw-black);border-radius:0;overflow:hidden;
+  transition:box-shadow .15s ease,border-color .15s ease}
+.input-row:focus-within{border-color:var(--red);box-shadow:0 0 0 3px rgba(215,38,46,.18)}
+.input-row textarea{flex:1;min-width:0;border:0;outline:none;resize:none;background:transparent;padding:15px 18px;
+  font-family:inherit;font-size:16px;line-height:1.4;color:var(--sw-black);min-height:51px;max-height:180px}
+.input-row textarea::placeholder{color:#888780}
+/* Send button */
+.send{position:relative;display:flex;align-items:stretch;flex:none;margin-left:calc(var(--stripe) * -1);padding:0;border:0;background:none;cursor:pointer}
+.send::before{content:"";position:absolute;inset:0;background:var(--sw-black);clip-path:polygon(var(--slant) 0,100% 0,100% 100%,0 100%)}   /* black stripe */
+.send-label{position:relative;display:flex;align-items:center;gap:6px;margin-left:var(--stripe);padding:0 30px 0 38px;background:var(--red);
+  clip-path:polygon(var(--slant) 0,100% 0,100% 100%,0 100%);color:#FFFFFF;font-family:var(--display);font-size:18px;font-weight:700;
+  font-style:italic;text-transform:uppercase;letter-spacing:.06em;transition:background .15s ease}
+.send-icon{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s ease}
+.send:hover .send-label,.send:focus-visible .send-label{background:var(--red-dark)}
+.send:hover .send-icon{transform:translateX(3px)}
+.send:focus-visible{outline:none}
+.send:active .send-label{transform:translateY(1px)}
+/* Empty box: button stays Southwire red (no faded gray); it just can't be clicked */
+.send:disabled{cursor:default}
+.send:disabled .send-label{background:var(--red)}
+.send:disabled .send-icon{transform:none}
+/* While an answer is generating the button becomes STOP: black face, red stripe, square stop icon */
+.send.stop::before{background:var(--red)}
+.send.stop .send-label,.send.stop:hover .send-label,.send.stop:focus-visible .send-label{background:var(--sw-black)}
+.send.stop .send-icon{display:none}
+.send.stop .send-label::before{content:"";width:10px;height:10px;background:currentColor;order:2}
+.note{margin-top:8px;margin-bottom:0;text-align:center;font-size:11px;color:#5F5E5A}
+@media (prefers-color-scheme:dark){.note{color:var(--muted)}}
+@media (max-width:480px){
+  .send-label{padding:0 18px 0 28px}
+  .input-row textarea{font-size:16px}   /* stops iOS zoom on focus */
+}
+
+/* Lexi intro banner — styled like the Send button (black slanted stripe + red face) */
+.lexi-banner{
+  --lexi-red:var(--red); --lexi-black:var(--sw-black); --lexi-white:#ffffff; --lexi-text:#333333;
+  --lexi-heading-font:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --lexi-body-font:"Barlow",Arial,sans-serif;
+  --lexi-slant:38px; --lexi-stripe:14px; --lexi-fade:0px; --lexi-unroll-time:1s; --lexi-text-delay:1.05s; --lexi-retract-time:1.2s;
+  position:absolute;top:200px;left:16%;right:9%;z-index:3;overflow:hidden;   /* content sliding into the tab is cut off here */
+  display:flex;align-items:stretch;
+  font-family:var(--lexi-body-font);
+}
+/* black slanted stripe on the left, like the Send button */
+.lexi-banner::before{content:"";position:absolute;inset:0;background:var(--lexi-black);clip-path:polygon(var(--lexi-slant) 0,100% 0,100% 100%,0 100%)}
+.lexi-banner::before{-webkit-mask-image:linear-gradient(90deg,transparent 50%,#000 50%);mask-image:linear-gradient(90deg,transparent 50%,#000 50%);-webkit-mask-size:200% 100%;mask-size:200% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:100% 0;mask-position:100% 0}
+.lexi-banner.is-animating::before{animation:lexi-unroll var(--lexi-unroll-time) cubic-bezier(.22,1,.36,1) both}   /* stripe unrolls with the panel */
+.lexi-banner__panel{
+  position:relative;flex:1;min-width:0;min-height:128px;box-sizing:border-box;margin-left:var(--lexi-stripe);
+  background:var(--lexi-red);color:var(--lexi-white);
+  padding:12px 24px 12px calc(var(--lexi-slant) + 18px);
+  clip-path:polygon(var(--lexi-slant) 0,100% 0,100% 100%,0 100%);   /* red face, slanted like Send */
+  -webkit-mask-image:linear-gradient(90deg,transparent 0%,transparent 50%,#000 calc(50% + var(--lexi-fade)),#000 100%);
+          mask-image:linear-gradient(90deg,transparent 0%,transparent 50%,#000 calc(50% + var(--lexi-fade)),#000 100%);
+  -webkit-mask-size:200% 100%;mask-size:200% 100%;
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+  -webkit-mask-position:100% 0;mask-position:100% 0;
+}
+/* vertical button-style tab on the right edge (where the rod was) */
+.lexi-banner__tab{position:relative;flex:none;display:flex;align-items:center;justify-content:center;width:48px;margin-left:-1px;
+  padding:0;border:0;cursor:pointer;pointer-events:auto;
+  background:var(--lexi-black);color:#fff;border-right:4px solid var(--lexi-red);box-sizing:border-box;   /* shows on the LEFT after the 180° turn */
+  writing-mode:vertical-rl;transform:rotate(180deg);   /* reads bottom-to-top */
+  font:italic 700 14px/1 var(--lexi-heading-font);text-transform:uppercase;letter-spacing:.12em;white-space:nowrap;user-select:none}
+.lexi-banner__tab:hover{background:var(--lexi-red);border-right-color:var(--lexi-black)}
+.lexi-banner__tab:focus-visible{outline:2px solid #fff;outline-offset:-6px}
+.lexi-banner__content{opacity:1}
+.lexi-banner__eyebrow{margin:0 0 4px;font:italic 700 12px/1.2 var(--lexi-heading-font);letter-spacing:.08em;text-transform:uppercase;opacity:.9}
+.lexi-banner__tips{display:flex;flex-wrap:wrap;gap:4px 28px;font-size:14px;font-weight:600;line-height:1.35}
+.lexi-banner__tips b{font-family:var(--lexi-heading-font);font-style:italic;font-size:16px;margin-right:2px}
+/* 20 spec chips: 2 rows of 10, styled like the source bubbles */
+.lexi-banner__specs{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.45)}
+.lexi-banner .bubble{width:100%;box-shadow:2px 2px 0 var(--lexi-black)}
+.lexi-banner .bubble:hover,.lexi-banner .bubble:focus-visible{background:var(--lexi-black);border-color:var(--lexi-black);color:#fff;box-shadow:2px 2px 0 #fff}
+/* right-hand chips: open the tooltip leftwards so it isn't cut off at the banner edge */
+.lexi-banner .bubble:nth-child(10n+8)::after,.lexi-banner .bubble:nth-child(10n+9)::after,.lexi-banner .bubble:nth-child(10n)::after{left:auto;right:-4px}
+.lexi-banner .bubble:nth-child(10n+8)::before,.lexi-banner .bubble:nth-child(10n+9)::before,.lexi-banner .bubble:nth-child(10n)::before{left:auto;right:6px}
+.lexi-banner__title{margin:0 0 6px;font:italic 700 18px/1.05 var(--lexi-heading-font);text-transform:uppercase;letter-spacing:.01em;color:var(--lexi-white)}
+.lexi-banner__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.lexi-banner__box{background:var(--lexi-white);color:var(--lexi-text);padding:5px 7px;border-left:3px solid var(--lexi-black)}
+.lexi-banner__box-title{display:block;margin-bottom:2px;font:700 12px/1.2 var(--lexi-heading-font);text-transform:uppercase;letter-spacing:.03em;color:var(--lexi-black)}
+.lexi-banner__box-text{margin:0;font-size:11px;line-height:1.3}
+.lexi-banner__box-text a{color:var(--lexi-red);font-weight:600;overflow-wrap:anywhere}
+.lexi-banner__box-text a:hover{color:#8f0b20}
+.lexi-banner__box-text a:focus-visible{outline:2px solid var(--lexi-black);outline-offset:2px}
+.lexi-banner.is-animating .lexi-banner__panel{animation:lexi-unroll var(--lexi-unroll-time) cubic-bezier(.22,1,.36,1) both}
+.lexi-banner.is-animating .lexi-banner__content{animation:lexi-text-in .4s ease-out var(--lexi-text-delay) both}
+@keyframes lexi-unroll{from{-webkit-mask-position:0% 0;mask-position:0% 0}to{-webkit-mask-position:100% 0;mask-position:100% 0}}
+@keyframes lexi-text-in{from{opacity:0}to{opacity:1}}
+/* Going back: everything slides right and disappears into the TESTING TIP tab, piece by piece */
+.lexi-banner.is-retracting::before,
+.lexi-banner.is-retracting .lexi-banner__panel{animation:lexi-slide-in var(--lexi-retract-time) cubic-bezier(.55,0,.8,.3) forwards}
+@keyframes lexi-slide-in{from{transform:none}to{transform:translateX(var(--lexi-travel,100vw))}}
+/* Collapsed: only the tab is left; the empty area lets clicks through to the chat */
+.lexi-banner.is-collapsed{pointer-events:none}
+.lexi-banner.is-collapsed::before,
+.lexi-banner.is-collapsed .lexi-banner__panel{visibility:hidden;transform:translateX(var(--lexi-travel,100vw))}   /* stay inside the tab */
+.lexi-banner.is-collapsed .bubble{transition:none}   /* no .12s fade-out flash of the chips */
+.lexi-banner[hidden]{display:none}
+body:not(.ready) .lexi-banner{visibility:hidden}   /* wait for the intro to finish, then unroll */
+@media (max-width:600px){
+  .lexi-banner{top:110px;left:12px;right:12px}
+  .lexi-banner{--lexi-slant:27px;--lexi-stripe:10px}
+  .lexi-banner__panel{min-height:90px;padding:10px 14px 10px calc(var(--lexi-slant) + 12px)}
+  .lexi-banner__tab{width:36px;font-size:12px}
+  .lexi-banner__tips{font-size:13px}
+  .lexi-banner__specs{grid-template-columns:repeat(5,minmax(0,1fr))}   /* 4 rows of 5 on phones */
+  .lexi-banner .bubble:nth-child(n)::after{left:-4px;right:auto}
+  .lexi-banner .bubble:nth-child(n)::before{left:6px;right:auto}
+  .lexi-banner .bubble:nth-child(5n+4)::after,.lexi-banner .bubble:nth-child(5n)::after{left:auto;right:-4px}
+  .lexi-banner .bubble:nth-child(5n+4)::before,.lexi-banner .bubble:nth-child(5n)::before{left:auto;right:6px}
+  .lexi-banner__title{font-size:18px}
+  .lexi-banner__grid{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  .lexi-banner.is-animating::before,
+  .lexi-banner.is-retracting::before,
+  .lexi-banner.is-retracting .lexi-banner__panel,
+  .lexi-banner.is-animating .lexi-banner__panel,
+  .lexi-banner.is-animating .lexi-banner__content{animation:none}
+}
+
+/* Mobile */
+.scrim{display:none}
+@media (max-width:860px){
+  .sidebar{position:fixed;top:0;bottom:0;left:0;transform:translateX(-100%)}
+  body.ready .sidebar{transform:translateX(-100%)}
+  body.ready.menu-open .sidebar{transform:none}
+  .menu-btn{display:flex}
+  .resizer{display:none}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:15}
+  body.menu-open .scrim{display:block}
+  .column{padding:24px 16px 16px}
+  .composer{padding:8px 12px 12px}
+  .msg-user,.msg-user-wrap{max-width:88%}.msg-bot{max-width:100%}
+  .suggestions{grid-template-columns:minmax(0,1fr)}
+  .ticker-tag{padding:0 22px 0 12px;font-size:16px}
+  .send{min-width:84px}
+}
+
+/* Reduced motion: keep the layout, drop decorative movement */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+  .cur,.gl{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ INTRO ============ -->
+<div id="intro" aria-hidden="true">
+  <svg viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice">
+    <!-- all 6 circuits end at the same point (500,300) at the same moment -->
+    <path class="cv" pathLength="100" d="M0 300 H300 L340 260 H460 L500 300"></path>
+    <path class="cv" pathLength="100" d="M1000 300 H700 L660 340 H540 L500 300"></path>
+    <path class="cv" pathLength="100" d="M500 0 V120 L540 160 V260 L500 300"></path>
+    <path class="cv" pathLength="100" d="M500 600 V480 L460 440 V340 L500 300"></path>
+    <path class="cv" pathLength="100" d="M0 80 H200 L300 180 H380 L500 300"></path>
+    <path class="cv" pathLength="100" d="M1000 540 H820 L720 440 H620 L500 300"></path>
+    <!-- junction: flashes when the circuits meet, then the logo pops over it -->
+    <circle class="hub" cx="500" cy="300" r="14"></circle>
+  </svg>
+  <div class="logo-box" data-logo><img alt="Southwire – We deliver power... responsibly" src="intro-logo.jpg"></div>
+  <div class="tagline">Connected. Powered. Ready.</div>
+</div>
+
+<div class="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar" aria-label="Chats">
+    <div class="side-head">
+      <div class="logo-box" data-logo style="border:0"><img alt="Southwire" src="logo-transparent.png"></div>
+      <p class="title">Southwire Assistant<br><br><br></p>
+    </div>
+    <div class="side-body">
+      <button class="btn-new" id="newChat" type="button"><span>New chat +</span></button>
+      <p class="side-label">Recent</p>
+      <ul class="history" id="history"></ul>
+    </div>
+    <div class="side-foot"><i></i>Southwire Family owned</div>
+    <div class="resizer" id="resizer" role="separator" aria-orientation="vertical" aria-label="Resize sidebar" title="Drag to resize, double-click to reset"></div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main" id="main">
+    <div class="bg" aria-hidden="true">
+      <img class="bg-logo" src="image%20copy%202.png" alt="">
+      <svg class="circuit" id="circuit" viewBox="0 0 1010 800" preserveAspectRatio="none"></svg>
+      <svg class="grid" id="grid" viewBox="0 0 1010 210" preserveAspectRatio="xMidYMax slice"></svg>
+    </div>
+
+    <div class="topbar">
+      <button class="menu-btn" id="menuBtn" type="button" aria-label="Open chats" aria-controls="sidebar" aria-expanded="false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="ticker-tag" aria-hidden="true">Powering</div>
+      <div class="ticker" aria-hidden="true"><div class="ticker-track" id="ticker"></div></div>
+    </div>
+
+    <!-- Lexi intro banner (top-right). Hidden on Send, shown again on New chat + -->
+    <section class="lexi-banner" id="lexi-banner" aria-label="Lexi">
+      <div class="lexi-banner__panel">
+        <div class="lexi-banner__content">
+          <p class="lexi-banner__eyebrow">Testing tip</p>
+          <div class="lexi-banner__tips">
+            <span><b>1.</b> Ask about Southwire, the company.</span>
+            <span><b>2.</b> Ask anything about the Building Wire spec sheets below.</span>
+          </div>
+          <div class="lexi-banner__specs" id="lexi-specs" aria-label="Spec sheets"></div>   <!-- chips are built in JS (LEXI_SPECS) -->
+        </div>
+      </div>
+      <button class="lexi-banner__tab" id="lexi-tab" type="button" aria-expanded="true" title="Show / hide the testing tip">Testing tip</button>
+    </section>
+
+    <section class="thread" id="thread" aria-live="polite" aria-label="Conversation">
+      <div class="wires" id="wires"></div>
+      <div class="column" id="column"></div>
+    </section>
+
+    <div class="composer">
+      <div class="quick" id="quick"></div>
+      <form class="input-row" id="form">
+        <label class="sr-only" for="input">Message</label>
+        <textarea id="input" rows="1" placeholder="Type your question" aria-label="Type your question" autocomplete="off"></textarea>
+        <button class="send" id="send" type="submit" disabled>
+          <span class="send-label"><span class="send-text">Send</span>
+            <svg class="send-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+          </span>
+        </button>
+      </form>
+      <p class="note">Answers can contain mistakes. Check critical specs against official product documentation and your local code.</p>
+    </div>
+  </main>
+</div>
+
+<script>
+/* =========================================================
+   CONFIG — edit these for your deployment
+   ========================================================= */
+const CONFIG = {
+  // All API calls go to the Node server in this folder (server.js) at /api.
+  // Node forwards them to the FastAPI backend (BACKEND_URL) and adds the secret AUTH_TOKEN there,
+  // so no backend URL or token is ever in this file or in the browser.
+  // Never put an API key in this file — keep keys in server environment variables.
+  apiBase: '/api',                     // same-origin proxy (see server.js) — set to '' for demo mode
+  endpoints: {
+    answer:  '/AnswerGeneration',          // POST { text, thread_id }  -> streamed answer
+    threads: '/get_all_threads',           // GET  -> [{ thread_id, first_question, timestamp }]
+    thread:  '/get_single_thread_by_id/'   // GET  + thread_id -> [{ user_question, bot_answer, timestamp, ... }]
+  },
+  get apiUrl(){ return this.apiBase ? this.apiBase.replace(/\/$/,'')+this.endpoints.answer : ''; },
+  headers: {},                 // leave empty: the auth token is added by server.js, not the browser
+  logoUrl: '',                 // path to your logo image, e.g. 'assets/logo-white.png'
+  assistantName: 'Southwire Assistant',
+  playIntro: true,
+  // playIntro: false,
+  industries: ['Wire & Cable','Utility','Data Centers','EV Charging','Renewables','Mass Transit','Building Solutions','Oil, Gas & Petrochem','Tools & Equipment']
+};
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const SVGNS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs){ const e=document.createElementNS(SVGNS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e; }
+
+// Minimal, safe markdown: paragraphs, - lists, **bold**, `code`
+function renderMarkdown(src){
+  const inline = t => esc(t).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>');
+  return src.split(/\n{2,}/).map(block=>{
+    const lines = block.split('\n');
+    if(lines.every(l=>/^\s*[-*] /.test(l))) return '<ul>'+lines.map(l=>'<li>'+inline(l.replace(/^\s*[-*] /,''))+'</li>').join('')+'</ul>';
+    return '<p>'+lines.map(inline).join('<br>')+'</p>';
+  }).join('');
+}
+
+/* =========================================================
+   BRAND LAYERS: logo, ticker, circuit, power-line skyline
+   ========================================================= */
+function setupLogo(){
+  if(!CONFIG.logoUrl) return;
+  document.querySelectorAll('[data-logo]').forEach(box=>{
+    box.textContent=''; box.style.border='0';
+    const img=new Image(); img.src=CONFIG.logoUrl; img.alt='Southwire'; box.appendChild(img);
+  });
+}
+function setupTicker(){
+  const items = CONFIG.industries.map(t=>`<span>${esc(t)}</span>`).join('');
+  $('#ticker').innerHTML = items;
+}
+function setupCircuit(){
+  const svg=$('#circuit');
+  const paths=['M0 120 H300 L360 180 H700 L760 120 H1010','M0 420 H180 L240 360 H520 L580 420 H1010'];
+  const curClasses=['cur1','cur2'];
+  paths.forEach(d=>svg.appendChild(svgEl('path',{class:'trace',d})));
+  paths.forEach((d,i)=>svg.appendChild(svgEl('path',{class:'cur '+curClasses[i],d})));
+  const nodes=[[300,120],[760,120],[240,360],[580,420]];
+  nodes.forEach(([x,y])=>{
+    const g=svgEl('g',{class:'cn'});
+    g.appendChild(svgEl('circle',{cx:x,cy:y,r:15,fill:'#111111'}));
+    g.appendChild(svgEl('circle',{cx:x,cy:y,r:11,fill:'#D71920'}));
+    g.appendChild(svgEl('circle',{cx:x,cy:y,r:3,fill:'#B8733A'}));
+    for(let a=0;a<6;a++) g.appendChild(svgEl('circle',{cx:x+6*Math.cos(a*Math.PI/3),cy:y+6*Math.sin(a*Math.PI/3),r:3,fill:'#B8733A'}));
+    svg.appendChild(g);
+  });
+}
+function setupGrid(){
+  const svg=$('#grid'), xs=[-260,80,420,760,1100], base=200, top=70;
+  xs.forEach(x=>svg.appendChild(svgEl('path',{class:'tower',d:
+    `M${x-22} ${base} L${x-6} ${top} L${x+6} ${top} L${x+22} ${base} M${x-17} ${base-35} L${x+17} ${base-35} M${x-12} ${base-75} L${x+12} ${base-75} `+
+    `M${x-22} ${base} L${x+12} ${base-75} M${x+22} ${base} L${x-12} ${base-75} M${x-30} ${top+14} L${x+30} ${top+14} M${x-24} ${top+34} L${x+24} ${top+34}`})));
+  [[84,'gl',-30],[104,'gl gl2',0],[84,'gl gl3',30]].forEach(([dy,cls,xo])=>{
+    let d=`M${xs[0]+xo} ${dy}`;
+    for(let i=0;i<xs.length-1;i++) d+=` Q${(xs[i]+xs[i+1])/2+xo} ${dy+46} ${xs[i+1]+xo} ${dy}`;
+    svg.appendChild(svgEl('path',{class:'line',d}));
+    svg.appendChild(svgEl('path',{class:cls,d}));
+  });
+}
+
+/* =========================================================
+   LIVE WIRES: current runs from the screen edge into each message
+   ========================================================= */
+const wireLinks=[]; // {msgEl, wireEl, side}
+function placeWire(link){
+  const thread=$('#thread'), tr=thread.getBoundingClientRect(), r=link.msgEl.getBoundingClientRect();
+  const top=r.top-tr.top+thread.scrollTop+24;
+  const w=link.wireEl;
+  w.style.top=top+'px';
+  if(link.side==='right'){ w.style.left=(r.right-tr.left)+'px'; w.style.width=Math.max(0,tr.right-r.right)+'px'; }
+  else { w.style.left='0px'; w.style.width=Math.max(0,r.left-tr.left)+'px'; }
+}
+function addWire(msgEl, side){
+  const w=document.createElement('div');
+  w.className='wire '+(side==='right'?'from-right':'from-left');
+  $('#wires').appendChild(w);
+  const link={msgEl,wireEl:w,side}; wireLinks.push(link);
+  placeWire(link);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>w.classList.add('on')));
+  setTimeout(()=>w.classList.add('done'),1400);
+}
+function clearWires(){ wireLinks.length=0; $('#wires').innerHTML=''; }
+new ResizeObserver(()=>wireLinks.forEach(placeWire)).observe($('#column'));
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let busy=false, controller=null;
+let threads=[];        // Recent list from GET /get_all_threads: [{thread_id, first_question, timestamp}], newest first
+let active=null;       // the conversation shown in the chat area: {id, messages:[{role,content}]}
+
+/* ---- Thread IDs: one UUID per conversation, sent to the backend as thread_id ----
+   - New chat button        -> a fresh UUID is created
+   - First page load, empty -> a UUID is created with the first question
+   - Opening a Recent item  -> that thread's own thread_id is reused for follow-ups */
+let current_thread_id=null;
+function newUUID(){
+  if(crypto.randomUUID) return crypto.randomUUID();
+  return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));  // fallback for non-secure pages
+}
+try{ localStorage.removeItem('sw-chat-history'); }catch(e){}   // chats now live in the backend DB, not the browser
+
+/* ---- Backend: Recent threads + single thread ---- */
+const apiPath=p=>CONFIG.apiBase.replace(/\/$/,'')+p;
+async function apiGet(path){
+  const res=await fetch(apiPath(path),{headers:{accept:'application/json',...CONFIG.headers}});
+  if(!res.ok) throw new Error('server responded '+res.status);
+  return res.json();
+}
+const byTime=r=>Date.parse(r.timestamp)||0;
+const shortTitle=q=>{ q=(q||'').trim()||'(untitled)'; return q.length>20 ? q.slice(0,20)+'...' : q; };
+
+// GET /get_all_threads -> fill the Recent list (newest first). Returns the threads, or null on error.
+async function fetchThreads(){
+  if(!CONFIG.apiBase){ threads=[]; renderHistory(); return threads; }
+  try{
+    const data=await apiGet(CONFIG.endpoints.threads);
+    const server=(Array.isArray(data)?data:[]).filter(t=>t&&t.thread_id);
+    // Keep the open chat's local entry if the DB hasn't saved it yet (e.g. answer still streaming)
+    const local=threads.find(t=>t.local && t.thread_id===current_thread_id && !server.some(s=>s.thread_id===t.thread_id));
+    threads=(local?[local,...server]:server).sort((a,b)=>byTime(b)-byTime(a));
+    renderHistory();
+    return threads;
+  }catch(err){
+    $('#history').innerHTML=`<li class="empty">Couldn’t load conversations (${esc(err.message)}).</li>`;
+    return null;
+  }
+}
+
+// GET /get_single_thread_by_id/{id} -> show the whole conversation (fetched fresh on every click).
+// The current chat stays on screen until the response arrives; only then is it swapped in one go.
+let pendingThreadId=null;   // thread being fetched right now (its Recent item shows a loading pulse)
+async function openThread(id){
+  if(busy) return;
+  pendingThreadId=id; renderHistory();
+  try{
+    const rows=await apiGet(CONFIG.endpoints.thread+encodeURIComponent(id));
+    if(pendingThreadId!==id) return;          // user clicked another thread / New chat / sent a message meanwhile
+    const messages=[];
+    (Array.isArray(rows)?rows:[]).slice().sort((a,b)=>byTime(a)-byTime(b)).forEach(r=>{   // oldest first
+      if(r.user_question) messages.push({role:'user',content:r.user_question});
+      if(r.bot_answer)    messages.push({role:'assistant',content:r.bot_answer,sources:r.sources});   // footer too, if the thread API ever returns sources
+    });
+    pendingThreadId=null;
+    current_thread_id=id;                     // follow-up questions reuse this thread_id
+    active={id,messages};
+    clearWires(); renderThread(); renderHistory(); closeMenu();
+  }catch(err){
+    if(pendingThreadId!==id) return;
+    pendingThreadId=null; renderHistory();    // stay on the current chat; just report the problem below it
+    const card=botCard(); card.classList.add('error');
+    card.querySelector('.content').innerHTML=renderMarkdown(`Couldn’t load that conversation (${err.message}). Check that your server is running, then click it again.`);
+    scrollDown();
+  }
+}
+
+/* =========================================================
+   RENDERING
+   ========================================================= */
+function renderHistory(){
+  const ul=$('#history');
+  if(!threads.length){ ul.innerHTML='<li class="empty">No recent chats.</li>'; return; }
+  ul.innerHTML='';
+  threads.forEach(t=>{
+    const li=document.createElement('li'), b=document.createElement('button');
+    b.type='button'; b.textContent=shortTitle(t.first_question);   // first 20 characters + "..."
+    b.title=t.first_question||'';                                   // full question on hover
+    if(t.thread_id===current_thread_id) b.setAttribute('aria-current','true');
+    if(t.thread_id===pendingThreadId){ b.classList.add('loading'); b.setAttribute('aria-busy','true'); }
+    b.onclick=()=>openThread(t.thread_id);
+    li.appendChild(b); ul.appendChild(li);
+  });
+}
+function renderWelcome(){
+  $('#column').innerHTML='';
+}
+const COPY_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="1"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>';
+const CHECK_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>';
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); return true; }
+  catch(e){ // fallback for non-secure pages (e.g. opened via file://)
+    const ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    let ok=false; try{ ok=document.execCommand('copy'); }catch(_){}
+    ta.remove(); return ok;
+  }
+}
+function addCopyButton(msgEl, getText){
+  const bar=document.createElement('div'); bar.className='msg-actions';
+  const b=document.createElement('button'); b.type='button'; b.className='copy-btn';
+  b.setAttribute('aria-label','Copy message'); b.innerHTML=COPY_ICON+'<span>Copy</span>';
+  b.onclick=async()=>{
+    const ok=await copyText(getText());
+    b.classList.toggle('copied',ok); b.innerHTML=(ok?CHECK_ICON+'<span>Copied</span>':COPY_ICON+'<span>Copy failed</span>');
+    clearTimeout(b._t); b._t=setTimeout(()=>{ b.classList.remove('copied'); b.innerHTML=COPY_ICON+'<span>Copy</span>'; },1500);
+  };
+  bar.appendChild(b); msgEl.appendChild(bar);
+}
+function userBubble(text){
+  const wrap=document.createElement('div'); wrap.className='msg-user-wrap';
+  const d=document.createElement('div'); d.className='msg-user'; d.textContent=text;
+  wrap.appendChild(d);
+  addCopyButton(wrap,()=>text);            // icon sits outside the dark bubble
+  $('#column').appendChild(wrap); return wrap;
+}
+function botCard(){
+  const d=document.createElement('div'); d.className='msg-bot';
+  d.innerHTML=`<div class="who">${esc(CONFIG.assistantName)}</div><div class="content"></div>`;
+  addCopyButton(d,()=>d.querySelector('.content').innerText.trim());
+  $('#column').appendChild(d); return d;
+}
+function renderThread(){
+  clearWires();
+  if(!active||!active.messages.length){ renderWelcome(); return; }
+  $('#column').innerHTML='';
+  active.messages.forEach(m=>{
+    if(m.role==='user') userBubble(m.content);
+    else{
+      const card=botCard(); card.querySelector('.content').innerHTML=renderMarkdown(m.content);
+      showSources(card,m.sources);
+    }
+  });
+  scrollDown(false);
+}
+// Source footer under an assistant answer: "Source: [1] [2]" — numbered bubbles linking to each spec sheet.
+// Sits outside .content so live re-painting of the answer doesn't wipe it.
+const SPEC_URL='https://cabletechsupport.southwire.com/en/cablespec/download_spec/?spec=';
+const EXT_ICON='<svg class="ext-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/><path d="M11 13l9-9"/><path d="M15 4h5v5"/></svg>';
+function showSources(card, sources){
+  if(!card||!Array.isArray(sources)||!sources.length) return;
+  card.querySelector('.sources')?.remove();
+  const footer=document.createElement('div'); footer.className='sources';
+  const label=document.createElement('span'); label.className='sources-label'; label.textContent='Source:';
+  footer.appendChild(label);
+  sources.forEach((s,i)=>{
+    if(s==null||s.spec_id==null) return;
+    const id=String(s.spec_id), tip='SOUTHWIRE_SPEC'+id+'.pdf';
+    const a=document.createElement('a'); a.className='bubble';
+    a.href=SPEC_URL+encodeURIComponent(id);
+    a.target='_blank'; a.rel='noopener noreferrer';     // open the spec sheet in a new tab
+    a.innerHTML=String(i+1)+EXT_ICON;                    // 1, 2, 3 … (backend order) + external-link icon
+    a.dataset.tip=tip;                                   // custom hover tooltip (CSS)
+    a.setAttribute('aria-label',tip+' (opens in a new tab)');
+    footer.appendChild(a);
+  });
+  card.querySelector('.content').after(footer);
+}
+function scrollDown(smooth=true){ const t=$('#thread'); t.scrollTo({top:t.scrollHeight,behavior:smooth&&!reduceMotion?'smooth':'instant'}); }
+
+/* =========================================================
+   SEND FLOW
+   ========================================================= */
+async function send(text){
+  text=(text||'').trim();
+  if(!text||busy) return;
+  busy=true; setSending(true);
+  if(pendingThreadId){ pendingThreadId=null; renderHistory(); }   // sending wins: drop a thread that was still loading
+
+  if(!active){
+    // New conversation: use the UUID made by "New chat" (or make one now on first page load)
+    active={id:current_thread_id||newUUID(),messages:[]};
+    $('#column').innerHTML='';
+  }
+  const chat=active;
+  current_thread_id=chat.id;   // same thread_id for every message in this conversation
+  // New conversation: show it at the top of Recent right away (the answer is still coming).
+  // After the answer finishes, Recent is re-fetched from the DB and this local entry is replaced.
+  if(!threads.some(t=>t.thread_id===chat.id)){
+    threads.unshift({thread_id:chat.id, first_question:text, timestamp:new Date().toISOString(), local:true});
+  }
+  renderHistory();
+  chat.messages.push({role:'user',content:text});
+
+  const u=userBubble(text); scrollDown(); addWire(u,'right');
+
+  await sleep(reduceMotion?0:450);
+  const typing=document.createElement('div'); typing.className='typing'; typing.setAttribute('aria-label','Assistant is typing');
+  typing.innerHTML='<i></i><i></i><i></i>'; $('#column').appendChild(typing); scrollDown();
+
+  let card=null, content=null, full='', cursor=null, lastPaint=0, sources=null;
+  const ensureCard=()=>{
+    if(card) return;
+    typing.remove();
+    card=botCard(); content=card.querySelector('.content');
+    cursor=document.createElement('span'); cursor.className='cursor';
+    addWire(card,'left'); scrollDown();
+  };
+  const paint=(force)=>{
+    const now=performance.now();
+    if(!force && now-lastPaint<40) return;
+    lastPaint=now; content.innerHTML=renderMarkdown(full); content.lastElementChild?.appendChild(cursor); scrollDown(false);
+  };
+
+  controller=new AbortController();
+  let answered=false;
+  try{
+    await getReply(chat.messages,
+      delta=>{ ensureCard(); full+=delta; paint(); },
+      controller.signal,
+      src=>{ sources=src; ensureCard(); showSources(card,src); scrollDown(false); });   // "sources" event -> footer
+    ensureCard(); paint(true); cursor.remove();
+    chat.messages.push({role:'assistant',content:full||'(No answer was returned.)',sources});
+    answered=true;
+  }catch(err){
+    ensureCard(); cursor?.remove();
+    if(err.name==='AbortError'){
+      if(full){ paint(true); cursor.remove(); chat.messages.push({role:'assistant',content:full,sources}); }
+      else {   // stopped before any text arrived: keep a note so the question isn't left without a reply
+        content.innerHTML=renderMarkdown('_Answer stopped._');
+        chat.messages.push({role:'assistant',content:'_Answer stopped._'});
+      }
+    }else{
+      card.classList.add('error');
+      content.innerHTML=renderMarkdown(`The assistant couldn’t be reached (${err.message}). Check CONFIG.apiBase and that your server is running, then send again.`);
+    }
+  }
+  busy=false; controller=null; setSending(false); $('#input').focus();
+  if(answered) fetchThreads();   // answer finished -> refresh Recent from the DB (new thread appears at the top)
+}
+function setSending(on){
+  // While an answer is generating the button becomes STOP. Clicking it only stops the answer —
+  // it never sends what the user has typed. Enter is ignored while busy, so the typed text stays
+  // in the box and can be sent once the answer has finished (or been stopped).
+  const b=$('#send');
+  b.querySelector('.send-text').textContent=on?'Stop':'Send';
+  b.classList.toggle('stop',on);
+  b.type=on?'button':'submit';
+  b.onclick=on?()=>controller?.abort():null;
+  b.title=on?'Stop generating this answer':'';
+  updateSendState();
+}
+// Send is disabled while the box is empty; Stop is always clickable while an answer is generating
+function updateSendState(){ $('#send').disabled = !busy && !$('#input').value.trim(); }
+
+/* =========================================================
+   BACKEND ADAPTER
+   ========================================================= */
+async function getReply(messages, onDelta, signal, onSources=()=>{}){
+  if(!CONFIG.apiUrl) return demoReply(messages[messages.length-1].content, onDelta, signal);
+  const res=await fetch(CONFIG.apiUrl,{method:'POST',headers:{'Content-Type':'application/json',...CONFIG.headers},body:JSON.stringify({text: messages[messages.length - 1].content, thread_id: current_thread_id}),signal});
+  if(!res.ok) throw new Error('server responded '+res.status);
+  const type=res.headers.get('content-type')||'';
+
+  // NDJSON (current backend): one JSON object per line
+  //   {"type":"token","content":"..."}                          -> answer text, streamed live
+  //   {"type":"sources","sources":[{"spec_id":..,"pages":[..]}]} -> source footer under the answer
+  if((type.includes('ndjson')||type.includes('jsonl')) && res.body){
+    const reader=res.body.getReader(), dec=new TextDecoder(); let buf='';
+    const handle=line=>{
+      if(!line.trim()) return;
+      let ev; try{ ev=JSON.parse(line); }catch(e){ onDelta(line+'\n'); return; }   // non-JSON line: show as text
+      if(ev.type==='token'){ if(ev.content) onDelta(ev.content); }
+      else if(ev.type==='sources'){ onSources(Array.isArray(ev.sources)?ev.sources:[]); }
+    };
+    while(true){
+      const {value,done}=await reader.read(); if(done) break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n'); buf=lines.pop();      // keep an unfinished line for the next read
+      lines.forEach(handle);
+    }
+    handle(buf+dec.decode());                             // last line if the stream didn't end with \n
+    return;
+  }
+  if(type.includes('text/event-stream') && res.body){
+    const reader=res.body.getReader(), dec=new TextDecoder(); let buf='';
+    while(true){
+      const {value,done}=await reader.read(); if(done) break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n'); buf=lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data:')) continue;
+        const data=line.slice(5).trim(); if(!data||data==='[DONE]') continue;
+        let piece='';
+        try{
+          const j=JSON.parse(data);
+          piece = typeof j.delta==='string' ? j.delta
+                : j.delta?.text ?? j.choices?.[0]?.delta?.content ?? j.text ?? j.content ?? '';
+        }catch(e){ piece=data; }
+        if(piece) onDelta(piece);
+      }
+    }
+    return;
+  }
+  let text;
+  if(type.includes('application/json')){
+    const j=await res.json();
+    text = j.reply ?? j.answer ?? j.message ?? j.content?.[0]?.text ?? j.choices?.[0]?.message?.content ?? '';
+  }else text=await res.text();
+  await streamText(text,onDelta,signal);
+}
+async function streamText(text,onDelta,signal){
+  const parts=text.match(/\S+\s*|\s+/g)||[];
+  for(const p of parts){
+    if(signal.aborted) throw new DOMException('Aborted','AbortError');
+    onDelta(p); await sleep(reduceMotion?0:22);
+  }
+}
+// Demo answers so the interface can be tried without a backend
+async function demoReply(q,onDelta,signal){
+  await sleep(900);
+  const s=q.toLowerCase(); let a;
+  if(/feeder|underground|garage|burial/.test(s)) a=`Common choices for an underground feeder are **direct-burial rated cable** or **individual conductors in conduit**.\n\nTo pick the right one I’d check:\n- The load in amps at the garage\n- The run length (for voltage drop)\n- The burial depth your local code requires\n\nShare the amperage and distance and I can narrow it down. Always confirm the final choice against the NEC and local code.`;
+  else if(/ev|charger|level 2/.test(s)) a=`Most **48 A Level 2** chargers need a dedicated **60 A** circuit, because continuous loads are sized at 125%.\n\nThe conductor size then depends on the wire type, terminal ratings and run length. Your charger’s installation manual lists the exact requirement — local code always has the final say.`;
+  else if(/voltage drop/.test(s)) a=`Voltage drop for a single-phase circuit is roughly:\n\n\`VD = 2 × K × I × L ÷ CM\`\n\nwhere K is about 12.9 for copper, I is the current, L is the one-way length in feet, and CM is the conductor’s circular mils. A common target is to keep drop under 3% on a branch circuit.`;
+  else if(/rep|sales|buy|distributor/.test(s)) a=`You can find your local sales representative on the **Find a Sales Representative** page of the Southwire website. Tell me your ZIP code and the product line you’re interested in, and I can point you in the right direction.`;
+  else a=`This is a demo answer. Connect your backend by setting **CONFIG.apiUrl** at the top of the script, and real answers about Southwire products, specs and orders will appear here.`;
+  await streamText(a,onDelta,signal);
+}
+
+/* =========================================================
+   UI WIRING
+   ========================================================= */
+const input=$('#input');
+function autosize(){ input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,180)+'px'; }
+input.addEventListener('input',()=>{ autosize(); updateSendState(); });
+input.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){ e.preventDefault(); $('#form').requestSubmit(); } });
+/* Lexi banner: hide on Send, show (and replay the unroll) on New chat + */
+// Spec sheets shown in the banner — each becomes a chip that opens its PDF in a new tab
+const LEXI_SPECS=['10000','10003','10004','10005','10006','10010','10012','10015','10020','10025',
+                  '10026','10028','10033','10036','10037','10040','10041','10050','10051','10054'];
+(function buildLexiSpecs(){
+  const box=document.getElementById('lexi-specs'); if(!box) return;
+  for(const id of LEXI_SPECS){
+    const a=document.createElement('a'); a.className='bubble';
+    a.href=SPEC_URL+encodeURIComponent(id);              // https://cabletechsupport.southwire.com/en/cablespec/download_spec/?spec=<id>
+    a.target='_blank'; a.rel='noopener noreferrer';      // new tab
+    a.dataset.tip='SOUTHWIRE_SPEC'+id+'.pdf';
+    a.setAttribute('aria-label','Spec sheet '+id+' (opens in a new tab)');
+    a.innerHTML=id+EXT_ICON;
+    box.appendChild(a);
+  }
+})();
+// Banner cycle: unroll out of the tab (1s) -> stay open 2.5s -> slide back into the tab.
+// Mouse over the banner pauses the countdown. Clicking the tab opens / closes it.
+const LEXI_UNROLL=1000, LEXI_HOLD=2500, LEXI_RESUME=3000;
+let lexiTimer=null, lexiDueAt=0, lexiHover=false;
+const lexiBanner=()=>document.getElementById('lexi-banner');
+const lexiOpen=b=>b && !b.hidden && !b.classList.contains('is-collapsed') && !b.classList.contains('is-retracting');
+function scheduleLexiRetract(ms){ clearTimeout(lexiTimer); lexiDueAt=Date.now()+ms; if(!lexiHover) lexiTimer=setTimeout(retractLexiBanner,ms); }
+function retractLexiBanner(){
+  const b=lexiBanner(); clearTimeout(lexiTimer);
+  if(!lexiOpen(b)) return;
+  b.style.setProperty('--lexi-travel',b.offsetWidth+'px');   // slide the full banner width, so it all passes under the tab
+  b.classList.remove('is-animating'); b.classList.add('is-retracting');
+  document.getElementById('lexi-tab')?.setAttribute('aria-expanded','false');
+  const finish=()=>{ if(!b.classList.contains('is-retracting')) return; b.classList.remove('is-retracting'); b.classList.add('is-collapsed'); };
+  b.querySelector('.lexi-banner__panel').addEventListener('animationend',e=>{ if(e.animationName==='lexi-slide-in') finish(); },{once:true});
+  setTimeout(finish,1500);   // fallback (e.g. reduced motion: no animation, so no animationend)
+}
+function hideLexiBanner(){ const b=lexiBanner(); clearTimeout(lexiTimer); if(b) b.hidden=true; }
+function showLexiBanner(){
+  const b=lexiBanner(); if(!b) return;
+  b.hidden=false; b.classList.remove('is-animating','is-retracting','is-collapsed'); void b.offsetWidth; b.classList.add('is-animating');
+  document.getElementById('lexi-tab')?.setAttribute('aria-expanded','true');
+  scheduleLexiRetract(LEXI_UNROLL+LEXI_HOLD);
+}
+(function wireLexiBanner(){
+  const b=lexiBanner(); if(!b) return;
+  document.getElementById('lexi-tab')?.addEventListener('click',()=>{ lexiOpen(b) ? retractLexiBanner() : showLexiBanner(); });
+  b.addEventListener('mouseenter',()=>{ lexiHover=true; if(lexiOpen(b)) clearTimeout(lexiTimer); });
+  b.addEventListener('mouseleave',()=>{ lexiHover=false; if(lexiOpen(b)) scheduleLexiRetract(Math.max(LEXI_RESUME,lexiDueAt-Date.now())); });
+})();
+$('#form').addEventListener('submit',e=>{ e.preventDefault(); if(busy) return; const t=input.value; if(t.trim()) hideLexiBanner(); input.value=''; autosize(); updateSendState(); send(t); });
+
+$('#newChat').onclick=()=>{ if(busy) return; showLexiBanner(); pendingThreadId=null; active=null; current_thread_id=newUUID(); renderThread(); renderHistory(); closeMenu(); input.focus(); };
+function closeMenu(){ document.body.classList.remove('menu-open'); $('#menuBtn').setAttribute('aria-expanded','false'); }
+$('#menuBtn').onclick=()=>{ const open=document.body.classList.toggle('menu-open'); $('#menuBtn').setAttribute('aria-expanded',String(open)); };
+$('#scrim').onclick=closeMenu;
+
+// Drag the sidebar's right edge to resize it (width is remembered)
+(()=>{
+  const MIN=200, MAX=520, KEY='sw-sidebar-w', root=document.documentElement, handle=$('#resizer');
+  const setW=w=>root.style.setProperty('--sidebar-w',Math.round(Math.min(MAX,Math.max(MIN,w)))+'px');  // whole pixels avoid seams
+  try{ const s=+localStorage.getItem(KEY); if(s) setW(s); }catch(e){}
+  handle.addEventListener('pointerdown',e=>{
+    e.preventDefault(); handle.setPointerCapture(e.pointerId);
+    handle.classList.add('dragging'); document.body.classList.add('resizing');
+    const left=$('#sidebar').getBoundingClientRect().left;
+    const move=ev=>setW(ev.clientX-left);
+    const up=()=>{
+      handle.removeEventListener('pointermove',move); handle.removeEventListener('pointerup',up);
+      handle.classList.remove('dragging'); document.body.classList.remove('resizing');
+      try{ localStorage.setItem(KEY,parseInt(getComputedStyle(root).getPropertyValue('--sidebar-w'))); }catch(e){}
+    };
+    handle.addEventListener('pointermove',move); handle.addEventListener('pointerup',up);
+  });
+  handle.addEventListener('dblclick',()=>{ root.style.removeProperty('--sidebar-w'); try{ localStorage.removeItem(KEY); }catch(e){} });
+})();
+
+// Keep chat messages above the power-tower animation; the composer floats over the towers
+(()=>{
+  const main=$('#main'), thread=$('#thread'), composer=$('.composer'), MIN_THREAD=220;
+  const fit=()=>{
+    const towers=[...document.querySelectorAll('#grid .tower')].map(t=>t.getBoundingClientRect()).filter(r=>r.width);
+    if(!towers.length) return;
+    const towerTop=Math.min(...towers.map(r=>r.top));
+    const mainR=main.getBoundingClientRect(), threadTop=thread.getBoundingClientRect().top;
+    const composerTop=mainR.bottom-composer.offsetHeight;          // ignores the intro slide-in transform
+    let gap=Math.max(0,composerTop-towerTop+16);                     // thread ends 16px above the tower tips (incl. stroke)
+    gap=Math.min(gap,Math.max(0,composerTop-threadTop-MIN_THREAD));  // never squeeze the chat below MIN_THREAD
+    const atBottom=thread.scrollHeight-thread.scrollTop-thread.clientHeight<40;
+    thread.style.marginBottom=gap+'px';
+    if(atBottom) scrollDown(false);                                  // shrinking the thread must not hide the last message
+  };
+  new ResizeObserver(fit).observe(main);
+  new ResizeObserver(fit).observe(composer);
+  fit();
+  // Fonts/images finishing after first paint change message heights — land on the last message again
+  addEventListener('load',()=>{ if(!busy) scrollDown(false); });
+  document.fonts?.ready.then(()=>{ if(!busy) scrollDown(false); });
+})();
+
+/* =========================================================
+   START
+   ========================================================= */
+setupLogo(); setupTicker(); setupCircuit(); setupGrid();
+renderHistory(); renderThread();
+// Every refresh: load Recent from the backend, then open the newest thread automatically
+fetchThreads().then(list=>{
+  if(list && list.length && !active && !busy) openThread(list[0].thread_id);
+});
+const start=()=>{ document.body.classList.add('ready'); showLexiBanner(); setTimeout(()=>$('#intro').remove(),700); input.focus(); };
+if(!CONFIG.playIntro||reduceMotion) start();
+else { setTimeout(start,3600); $('#intro').addEventListener('click',start,{once:true}); }
+</script>
+</body>
+</html>
+
